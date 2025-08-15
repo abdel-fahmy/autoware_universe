@@ -66,20 +66,20 @@ MpcLateralController::MpcLateralController(
   /*PID Parameters*/
 
   /* PID Parameters */
-  // node.declare_parameter<double>("k_p", 0.5);
-  // node.get_parameter("k_p", pid_kp_);
+  node.declare_parameter<double>("k_p", 0.5);
+  node.get_parameter("k_p", pid_kp_);
 
-  // node.declare_parameter<double>("k_i", 0.0);
-  // node.get_parameter("k_i", pid_ki_);
+  node.declare_parameter<double>("k_i", 0.0);
+  node.get_parameter("k_i", pid_ki_);
 
-  // node.declare_parameter<double>("k_d", 0.015);
-  // node.get_parameter("k_d", pid_kd_);
+  node.declare_parameter<double>("k_d", 0.015);
+  node.get_parameter("k_d", pid_kd_);
 
-  // node.declare_parameter<double>("int_min", -1.0);
-  // node.get_parameter("int_min", pid_int_min_);
+  node.declare_parameter<double>("int_min", -1.0);
+  node.get_parameter("int_min", pid_int_min_);
 
-  // node.declare_parameter<double>("int_max", 1.0);
-  // node.get_parameter("int_max", pid_int_max_);
+  node.declare_parameter<double>("int_max", 1.0);
+  node.get_parameter("int_max", pid_int_max_);
 
   /* stop state parameters */
   m_stop_state_entry_ego_speed = dp_double("stop_state_entry_ego_speed");
@@ -361,12 +361,12 @@ trajectory_follower::LateralOutput MpcLateralController::run(
   }
 
   int_error = int_error + (steer_lat_error * steer_dt);
-  p_int = std::clamp(int_error, -1.0, 1.0);
+  p_int = std::clamp(int_error, pid_int_min_, pid_int_max_);
 
   // int_error += steer_lat_error * steer_dt;
 
   ctrl_cmd.steering_tire_angle =
-    0.5 * ctrl_cmd.steering_tire_angle + 0.015* diff_error + 0.0 * p_int;
+    pid_kp_ * ctrl_cmd.steering_tire_angle + pid_kd_* diff_error + pid_ki_ * p_int;
 
   publishPredictedTraj(predicted_traj);
   publishDebugValues(debug_values);
