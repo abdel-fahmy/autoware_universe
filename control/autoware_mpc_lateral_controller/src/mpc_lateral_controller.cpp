@@ -65,21 +65,12 @@ MpcLateralController::MpcLateralController(
 
   /*PID Parameters*/
 
-  /* PID Parameters */
-  node.declare_parameter<double>("k_p", 0.5);
-  node.get_parameter("k_p", pid_kp_);
-
-  node.declare_parameter<double>("k_i", 0.0);
-  node.get_parameter("k_i", pid_ki_);
-
-  node.declare_parameter<double>("k_d", 0.015);
-  node.get_parameter("k_d", pid_kd_);
-
-  node.declare_parameter<double>("int_min", -1.0);
-  node.get_parameter("int_min", pid_int_min_);
-
-  node.declare_parameter<double>("int_max", 1.0);
-  node.get_parameter("int_max", pid_int_max_);
+  // /* PID Parameters */
+  pid_kp_ = dp_double("k_p");
+  pid_ki_ = dp_double("k_i");
+  pid_kd_ = dp_double("k_d");
+  pid_int_min_ = dp_double("int_min");
+  pid_int_max_ = dp_double("int_max");
 
   /* stop state parameters */
   m_stop_state_entry_ego_speed = dp_double("stop_state_entry_ego_speed");
@@ -366,7 +357,7 @@ trajectory_follower::LateralOutput MpcLateralController::run(
   // int_error += steer_lat_error * steer_dt;
 
   ctrl_cmd.steering_tire_angle =
-    pid_kp_ * ctrl_cmd.steering_tire_angle + pid_kd_* diff_error + pid_ki_ * p_int;
+    ctrl_cmd.steering_tire_angle - ( pid_kp_ * steer_lat_error +  pid_kd_* diff_error + pid_ki_* p_int);
 
   publishPredictedTraj(predicted_traj);
   publishDebugValues(debug_values);
@@ -406,8 +397,12 @@ trajectory_follower::LateralOutput MpcLateralController::run(
   m_ctrl_cmd_prev = ctrl_cmd;
   steer_prev_error = steer_lat_error;
 
-  RCLCPP_ERROR(logger_, " THE INTEGRAL IS %f. ", int_error);
-  RCLCPP_ERROR(logger_, " THE ANTI_FILTERED IS %f. ", p_int);
+  RCLCPP_ERROR(logger_, " THE INPUT COMMAND IS %f. ", ctrl_cmd.steering_tire_angle);
+  RCLCPP_ERROR(logger_, " THE INPUT COMMAND IS %f. ", ctrl_cmd.steering_tire_angle);
+
+  
+  RCLCPP_ERROR(logger_, " THE ERROR IS %f. ",steer_lat_error );
+  RCLCPP_ERROR(logger_, " THE INTEGRAL ERROR IS %f. ", int_error);
 
   return createLateralOutput(ctrl_cmd, mpc_solved_status.result, ctrl_cmd_horizon);
 }

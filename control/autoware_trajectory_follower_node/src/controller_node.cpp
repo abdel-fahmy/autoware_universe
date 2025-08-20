@@ -189,6 +189,9 @@ bool Controller::isTimeOut(
 boost::optional<trajectory_follower::InputData> Controller::createInputData(rclcpp::Clock & clock)
 {
   if (!processData(clock)) {
+
+        RCLCPP_INFO_THROTTLE(
+      get_logger(), *get_clock(), 5000, "CONTROL DEBUG.");
     return {};
   }
 

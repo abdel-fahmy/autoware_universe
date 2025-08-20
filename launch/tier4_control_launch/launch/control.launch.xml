@@ -128,8 +128,7 @@
 
       <!-- trajectory_follower_node -->
       <group if="$(eval &quot;'$(var trajectory_follower_mode)' == 'trajectory_follower_node'&quot;)">
-        <load_composable_node target="/control/control_container">
-          <composable_node pkg="autoware_trajectory_follower_node" plugin="autoware::motion::control::trajectory_follower_node::Controller" name="controller_node_exe" namespace="trajectory_follower">
+          <node pkg="autoware_trajectory_follower_node" exec="controller_node_exe" name="controller_node_exe" namespace="trajectory_follower" launch-prefix="konsole -e gdb -ex run --args">
             <remap from="~/input/reference_trajectory" to="/planning/scenario_planning/trajectory"/>
             <remap from="~/input/current_odometry" to="/localization/kinematic_state"/>
             <remap from="~/input/current_steering" to="/vehicle/status/steering_status"/>
@@ -148,9 +147,7 @@
             <param from="$(var lon_controller_param_path)"/>
             <param from="$(var lat_controller_param_path)"/>
             <param from="$(var vehicle_param_file)"/>
-            <extra_arg name="use_intra_process_comms" value="$(var use_intra_process)"/>
-          </composable_node>
-        </load_composable_node>
+          </node>
       </group>
 
       <!-- smart_mpc, under development -->

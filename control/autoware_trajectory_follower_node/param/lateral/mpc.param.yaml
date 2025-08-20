@@ -58,7 +58,7 @@
     error_deriv_lpf_cutoff_hz: 5.0
 
     k_p: 0.5
-    k_i: 0
+    k_i: 0.12
     k_d: 0.015
     int_min: -1.0
     int_max: 1.0
