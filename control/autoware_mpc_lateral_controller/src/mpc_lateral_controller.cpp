@@ -286,6 +286,7 @@ trajectory_follower::LateralOutput MpcLateralController::run(
   const auto [get_data_result, mpc_pid_data] =
     m_mpc->getData(reference_trajectory, m_current_steering, m_current_kinematic_state);
 
+
   // data.nearest_pose = ????????
 
   // MPCUtils::calcNearestPoseInterp(
@@ -294,8 +295,9 @@ trajectory_follower::LateralOutput MpcLateralController::run(
 
   // //3-get the lateral error
   double steer_lat_error = mpc_pid_data.lateral_err;
+  double steer_yaw_error = mpc_pid_data.yaw_err;
 
-  RCLCPP_ERROR(logger_, " THE ERROR IS %f. ", steer_lat_error);
+  RCLCPP_ERROR(logger_, " THE ERROR IS %f and %f. ", steer_lat_error, steer_yaw_error);
 
   Lateral ctrl_cmd;
   Trajectory predicted_traj;
@@ -341,6 +343,12 @@ trajectory_follower::LateralOutput MpcLateralController::run(
       input_data.current_steering.steering_tire_angle);  // use unbiased steering
     ctrl_cmd.steering_tire_angle += steering_offset_->getOffset();
   }
+  current_steer_buffer.push_back(m_current_steering.steering_tire_angle);
+  if (current_steer_buffer.size() > 5){
+    current_steer_buffer.pop_front();
+
+  }
+
 
   double diff_error;
   double p_int;
@@ -354,10 +362,35 @@ trajectory_follower::LateralOutput MpcLateralController::run(
   int_error = int_error + (steer_lat_error * steer_dt);
   p_int = std::clamp(int_error, pid_int_min_, pid_int_max_);
 
-  // int_error += steer_lat_error * steer_dt;
+  if (
+    current_steer_buffer[3] == current_steer_buffer[2] and
+    current_steer_buffer[2] == current_steer_buffer[1]) {
+    if (m_current_steering.steering_tire_angle > 0) {
+      ctrl_cmd.steering_tire_angle =
+        ctrl_cmd.steering_tire_angle -
+        (pid_kp_ * steer_lat_error + pid_kd_ * diff_error + pid_ki_ * p_int) - 0.002;
+
+    } else {
+      ctrl_cmd.steering_tire_angle =
+        ctrl_cmd.steering_tire_angle -
+        (pid_kp_ * steer_lat_error + pid_kd_ * diff_error + pid_ki_ * p_int) + 0.002;
+    }
+  }else{
 
   ctrl_cmd.steering_tire_angle =
-    ctrl_cmd.steering_tire_angle - ( pid_kp_ * steer_lat_error +  pid_kd_* diff_error + pid_ki_* p_int);
+    ctrl_cmd.steering_tire_angle -
+    (pid_kp_ * steer_lat_error + pid_kd_ * diff_error + pid_ki_ * p_int);
+
+  }
+
+  const auto filtered_pid_steer = m_mpc->m_lpf_steer_pid.filter(ctrl_cmd.steering_tire_angle);
+
+  RCLCPP_ERROR(
+    logger_, " BEFORE AND AFTER FILTER IS %f and %f. ", ctrl_cmd.steering_tire_angle,
+    filtered_pid_steer);
+
+  ctrl_cmd.steering_tire_angle = filtered_pid_steer;
+
 
   publishPredictedTraj(predicted_traj);
   publishDebugValues(debug_values);
@@ -396,11 +429,14 @@ trajectory_follower::LateralOutput MpcLateralController::run(
 
   m_ctrl_cmd_prev = ctrl_cmd;
   steer_prev_error = steer_lat_error;
-
-  RCLCPP_ERROR(logger_, " THE INPUT COMMAND IS %f. ", ctrl_cmd.steering_tire_angle);
-  RCLCPP_ERROR(logger_, " THE INPUT COMMAND IS %f. ", ctrl_cmd.steering_tire_angle);
-
   
+
+  RCLCPP_ERROR(logger_, " CURRENT STEER_01 IS %f. ", current_steer_buffer[4]);
+  RCLCPP_ERROR(logger_, " CURRENT STEER_02 IS %f. ", current_steer_buffer[3]);
+  RCLCPP_ERROR(logger_, " CURRENT STEER_03 IS %f. ", current_steer_buffer[2]);
+  RCLCPP_ERROR(logger_, " CURRENT STEER_04 IS %f. ", current_steer_buffer[1]);
+  RCLCPP_ERROR(logger_, " THE INPUT COMMAND IS %f. ", ctrl_cmd.steering_tire_angle);
+
   RCLCPP_ERROR(logger_, " THE ERROR IS %f. ",steer_lat_error );
   RCLCPP_ERROR(logger_, " THE INTEGRAL ERROR IS %f. ", int_error);
 

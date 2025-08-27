@@ -225,6 +225,7 @@ private:
   double m_raw_steer_cmd_pprev = 0.0;  // Raw output computed two iterations ago.
   double m_lateral_error_prev = 0.0;   // Previous lateral error for derivative calculation.
   double m_yaw_error_prev = 0.0;       // Previous heading error for derivative calculation.
+  double m_steer_pid_error_prev = 0.0; 
 
   bool m_is_forward_shift = true;  // Flag indicating if the shift is in the forward direction.
 
@@ -416,6 +417,9 @@ public:
   double ego_nearest_dist_threshold = 3.0;  // Threshold for nearest index search based on distance.
   double ego_nearest_yaw_threshold = M_PI_2;  // Threshold for nearest index search based on yaw.
 
+  Butterworth2dFilter m_lpf_steer_pid; 
+
+
   bool m_use_delayed_initial_state =
     true;  // Flag to use x0_delayed as initial state for predicted trajectory
 
@@ -513,6 +517,7 @@ MPCTrajectory applyVelocityDynamicsFilter(
     m_lpf_steering_cmd.initialize(m_ctrl_period, steering_lpf_cutoff_hz);
     m_lpf_lateral_error.initialize(m_ctrl_period, error_deriv_lpf_cutoff_hz);
     m_lpf_yaw_error.initialize(m_ctrl_period, error_deriv_lpf_cutoff_hz);
+    m_lpf_steer_pid.initialize(m_ctrl_period, steering_lpf_cutoff_hz);
   }
 
   /**
