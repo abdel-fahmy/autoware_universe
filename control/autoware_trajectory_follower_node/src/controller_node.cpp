@@ -76,8 +76,8 @@ Controller::Controller(const rclcpp::NodeOptions & node_options) : Node("control
 
   const double ctrl_period = declare_parameter<double>("ctrl_period");
   timeout_thr_sec_ = declare_parameter<double>("timeout_thr_sec");
-  error_threshold = declare_parameter<double>("error_threshold");
-  error_compensation = declare_parameter<double>("error_compensation");
+  // error_threshold = declare_parameter<double>("error_threshold");
+  // error_compensation = declare_parameter<double>("error_compensation");
 
   // NOTE: It is possible that using control_horizon could be expected to enhance performance,
   // but it is not a formal interface topic, only an experimental one.
@@ -300,31 +300,31 @@ void Controller::callbackTimerControl()
     RCLCPP_INFO(get_logger(), "DISABLE CONTROLLER");
 
     // we need to add the error threshold check
-    if (std::abs(steer_lat_error_0) > 0.03*error_threshold) {
+    if (std::abs(steer_lat_error_0) > 0.03) {
       RCLCPP_INFO(get_logger(), "KICK_IN");
 
       out.lateral = lat_out.control_cmd;
-      out.lateral.steering_tire_angle = 0.4 * error_compensation* out.lateral.steering_tire_angle;  // 0.4
-      } else if (std::abs(steer_lat_error_0) > 0.02*error_threshold) {
+      out.lateral.steering_tire_angle = 0.4 * out.lateral.steering_tire_angle;  // 0.4
+      } else if (std::abs(steer_lat_error_0) > 0.02) {
       out.lateral = lat_out.control_cmd;
-      out.lateral.steering_tire_angle = 0.3 * error_compensation* out.lateral.steering_tire_angle;  // 0.25
-      } else if (std::abs(steer_lat_error_0) > 0.018*error_threshold) {
+      out.lateral.steering_tire_angle = 0.3 * out.lateral.steering_tire_angle;  // 0.25
+      } else if (std::abs(steer_lat_error_0) > 0.018) {
       out.lateral = lat_out.control_cmd;
-      out.lateral.steering_tire_angle = 0.25 * error_compensation* out.lateral.steering_tire_angle;  // 0.25
-    } else if (std::abs(steer_lat_error_0) > 0.015*error_threshold) {
+      out.lateral.steering_tire_angle = 0.25 * out.lateral.steering_tire_angle;  // 0.25
+    } else if (std::abs(steer_lat_error_0) > 0.015) {
       out.lateral = lat_out.control_cmd;
-      out.lateral.steering_tire_angle = 0.15 * error_compensation* out.lateral.steering_tire_angle;  // 0.25
-    } else if (std::abs(steer_lat_error_0) > 0.009*error_threshold) {
+      out.lateral.steering_tire_angle = 0.15 * out.lateral.steering_tire_angle;  // 0.25
+    } else if (std::abs(steer_lat_error_0) > 0.009) {
       out.lateral = lat_out.control_cmd;
-      out.lateral.steering_tire_angle = 0.5 * error_compensation* out.lateral.steering_tire_angle;  // 0.25
-    } else if (std::abs(steer_lat_error_0) > 0.005*error_threshold) {
+      out.lateral.steering_tire_angle = 0.5 *  out.lateral.steering_tire_angle;  // 0.25
+    } else if (std::abs(steer_lat_error_0) > 0.005) {
       out.lateral = lat_out.control_cmd;
-      out.lateral.steering_tire_angle = 0.021 * error_compensation* out.lateral.steering_tire_angle;  // 0.1
+      out.lateral.steering_tire_angle = 0.021 * out.lateral.steering_tire_angle;  // 0.1
 
     } else {
       RCLCPP_INFO(get_logger(), "NO CORRECTION");
 
-      out.lateral.steering_tire_angle = 0.8 * error_compensation* out.lateral.steering_tire_angle;  // 0.4
+      out.lateral.steering_tire_angle = 0.8 * out.lateral.steering_tire_angle;  // 0.4
       out.lateral = lat_out.control_cmd;
       // out.lateral.steering_tire_angle = 0.0 * out.lateral.steering_tire_angle;
     }

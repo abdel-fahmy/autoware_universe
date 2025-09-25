@@ -80,8 +80,8 @@ public:
 private:
   rclcpp::TimerBase::SharedPtr timer_control_;
   double timeout_thr_sec_;
-  double error_threshold;
-  double error_compensation; 
+  // double error_threshold;
+  // double error_compensation; 
   bool enable_control_cmd_horizon_pub_{false};
   boost::optional<LongitudinalOutput> longitudinal_output_{boost::none};
 
